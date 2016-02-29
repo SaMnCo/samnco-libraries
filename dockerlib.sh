@@ -40,6 +40,7 @@ case ${UBUNTU_CODENAME} in
 			* )
 			die Aborting. Nothing installed. 
 			;;
+		esac
 	;;
 	trusty )
 		apt-get update -qq && \
