@@ -5,7 +5,7 @@
 #
 # Notes: 
 # 
-# Maintainer: Samuel Cozannet <samuel@blended.io>, http://blended.io 
+# Maintainer: Samuel Cozannet <samnco@gmail.com>
 #
 #####################################################################
 

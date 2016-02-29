@@ -5,7 +5,7 @@
 #
 # Notes: 
 # 
-# Maintainer: Samuel Cozannet <samuel.cozannet@madeden.com> 
+# Maintainer: Samuel Cozannet <samnco@gmail.com>
 #
 #####################################################################
 
