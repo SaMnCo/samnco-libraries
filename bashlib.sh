@@ -126,3 +126,11 @@ function is_sudoer() {
         echo 0
     fi
 }
+
+function get_ubuntu_codename() {
+    lsb_release -a 2>/dev/null | grep Codename | awk '{ print $2 }'
+}
+
+function get_ubuntu_version() {
+    lsb_release -a 2>/dev/null | grep Release | awk '{ print $2 }'
+}
