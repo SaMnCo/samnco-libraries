@@ -20,7 +20,7 @@ DOCKER_MACHINE="0.6.0"
 [ -z "${LOGTAG}" ] && LOGTAG="unknown"
 [ -z "${MIN_LOG_LEVEL}" ] && MIN_LOG_LEVEL="debug"
 
-source "${MYDIR}/bashlib.sh"
+[ -f "${MYDIR}/../lib/bashlib.sh" ] && source "${MYDIR}/../lib/bashlib.sh"
 UBUNTU_CODENAME="$(get_ubuntu_codename)"
 
 case ${UBUNTU_CODENAME} in
@@ -36,8 +36,10 @@ case ${UBUNTU_CODENAME} in
 					linux-headers-generic-lts-trusty \
 				log warn Now rebooting machine. Please restart process afterward
 				reboot now
+			;;
 			* )
 			die Aborting. Nothing installed. 
+			;;
 	;;
 	trusty )
 		apt-get update -qq && \

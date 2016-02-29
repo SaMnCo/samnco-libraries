@@ -121,7 +121,7 @@ function ensure_cmd_or_install_kubectl() {
     local CMD=kubectl
 
     [ -z ${K8S_VERSION} ] && K8S_VERSION=${LOCAL_K8S_VERSION}
-    hash $CMD 2>/dev/null || 
+    hash $CMD 2>/dev/null || {
         log warn $CMD not available. Attempting to install...
         wget http://storage.googleapis.com/kubernetes-release/release/v${K8S_VERSION}/bin/linux/amd64/kubectl
         chmod 755 kubectl
