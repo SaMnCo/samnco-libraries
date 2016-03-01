@@ -113,7 +113,17 @@ function docker_cleanup() {
 }
 
 function bootstrap_k8s() {
-	[ -z ${K8S_VERSION} ] && K8S_VERSION=1.0
+	[ -z ${K8S_VERSION} ] && K8S_VERSION=1.1.3
+	[ -z ${ETCD_VERSION} ] && ETCD_VERSION=2.0.12
+	docker run \
+		--net=host \
+		-d \
+		gcr.io/google_containers/etcd:${ETCD_VERSION} \
+		/usr/local/bin/etcd \
+			--addr=127.0.0.1:4001 \
+			--bind-addr=0.0.0.0:4001 \
+			--data-dir=/var/etcd/data
+
 	docker run \
 	    --volume=/:/rootfs:ro \
 	    --volume=/sys:/sys:ro \
@@ -135,6 +145,15 @@ function bootstrap_k8s() {
 	        --cluster-dns=10.0.0.10 \
 	        --cluster-domain=cluster.local \
 	        --allow-privileged=true --v=10
+
+	docker run \
+		-d \
+		--net=host \
+		--privileged \
+		gcr.io/google_containers/hyperkube:v${K8S_VERSION} \
+		/hyperkube proxy \
+			--master=http://127.0.0.1:8080 \
+			--v=2
 
 }
 
