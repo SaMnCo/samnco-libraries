@@ -71,7 +71,7 @@ function ensure_docker_or_install() {
     	apt-get install -yqq docker-engine
     	[ `grep docker /etc/group` ] || groupadd docker 
     	usermod -aG docker ${USER}
-    	newgrp ${USER}
+    	# newgrp ${USER}
     	log info "Successfully installed docker-engine"
     }
 
