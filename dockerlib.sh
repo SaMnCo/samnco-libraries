@@ -29,13 +29,13 @@ case ${UBUNTU_CODENAME} in
 		read NEXT
 		case ${NEXT} in 
 			Y | y )
-				apt-get update -qq && \
-				apt-get install -yqq apparmor \
+				sudo apt-get update -qq && \
+				sudo apt-get install -yqq apparmor \
 					linux-image-extra-$(uname -r) \
 					linux-image-generic-lts-trusty \
 					linux-headers-generic-lts-trusty \
 				log warn Now rebooting machine. Please restart process afterward
-				reboot now
+				sudo reboot now
 			;;
 			* )
 			die Aborting. Nothing installed. 
@@ -43,13 +43,13 @@ case ${UBUNTU_CODENAME} in
 		esac
 	;;
 	trusty )
-		apt-get update -qq && \
-		apt-get install -yqq apparmor \
+		sudo apt-get update -qq && \
+		sudo apt-get install -yqq apparmor \
 			linux-image-extra-$(uname -r)
 	;;
 	wily )
-		apt-get update -qq && \
-		apt-get install -yqq apparmor \
+		sudo apt-get update -qq && \
+		sudo apt-get install -yqq apparmor \
 			linux-image-extra-$(uname -r)
 	;;
 	* )
@@ -63,14 +63,14 @@ function ensure_docker_or_install() {
     hash $CMD 2>/dev/null || {
     	ensure_cmd_or_install_package_apt curl curl
     	log warn Docker not available. Attempting to install. 
-    	apt-get update -qq && \
-    	apt-get install -yqq apt-transport-https ca-certificates linux-image-extra-$(uname -r)
-    	apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys "${DOCKER_KEY}"
+    	sudo apt-get update -qq && \
+    	sudo apt-get install -yqq apt-transport-https ca-certificates linux-image-extra-$(uname -r)
+    	sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys "${DOCKER_KEY}"
     	echo "deb https://apt.dockerproject.org/repo ubuntu-${UBUNTU_CODENAME} main" > /etc/apt/sources.list.d/docker.list 
-    	apt-get update -qq && \
-    	apt-get install -yqq docker-engine
-    	[ `grep docker /etc/group` ] || groupadd docker 
-    	usermod -aG docker ${USER}
+    	sudo apt-get update -qq && \
+    	sudo apt-get install -yqq docker-engine
+    	[ `grep docker /etc/group` ] || sudo groupadd docker 
+    	sudo usermod -aG docker ${USER}
     	# newgrp ${USER}
     	log info "Successfully installed docker-engine"
     }
@@ -78,16 +78,18 @@ function ensure_docker_or_install() {
     local CMD=docker-machine
     hash $CMD 2>/dev/null || {
     	log warn docker-machine not available. Attempting to install. 
-    	curl -L https://github.com/docker/machine/releases/download/v"${DOCKER_MACHINE}"/docker-machine-`uname -s`-`uname -m` > /usr/local/bin/docker-machine && \
-		chmod +x /usr/local/bin/docker-machine && \
+    	curl -L https://github.com/docker/machine/releases/download/v"${DOCKER_MACHINE}"/docker-machine-`uname -s`-`uname -m` > /tmp/docker-machine && \
+    	sudo mv /tmp/docker-machine /usr/local/bin/docker-machine && \
+		sudo chmod +x /usr/local/bin/docker-machine && \
 		log info "Successfully installed docker-machine"
     }
 
     local CMD=docker-compose
     hash $CMD 2>/dev/null || {
     	log warn docker-compose not available. Attempting to install. 
-    	curl -L https://github.com/docker/compose/releases/download/"${DOCKER_COMPOSE}"/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose && \
-    	chmod +x /usr/local/bin/docker-compose && \
+    	curl -L https://github.com/docker/compose/releases/download/"${DOCKER_COMPOSE}"/docker-compose-`uname -s`-`uname -m` > /tmp/docker-compose && \
+    	sudo mv /tmp/docker-compose /usr/local/bin/docker-compose && \
+    	sudo chmod +x /usr/local/bin/docker-compose && \
 		log info "Successfully installed docker-compose" 	
     }
 }
@@ -115,7 +117,7 @@ function docker_cleanup() {
 function bootstrap_k8s() {
 	[ -z ${K8S_VERSION} ] && K8S_VERSION=1.1.3
 	[ -z ${ETCD_VERSION} ] && ETCD_VERSION=2.0.12
-	docker run \
+	sudo docker run \
 		--net=host \
 		-d \
 		gcr.io/google_containers/etcd:${ETCD_VERSION} \
@@ -124,7 +126,7 @@ function bootstrap_k8s() {
 			--bind-addr=0.0.0.0:4001 \
 			--data-dir=/var/etcd/data
 
-	docker run \
+	sudo docker run \
 	    --volume=/:/rootfs:ro \
 	    --volume=/sys:/sys:ro \
 	    --volume=/dev:/dev \
@@ -135,7 +137,7 @@ function bootstrap_k8s() {
 	    --pid=host \
 	    --privileged=true \
 	    -d \
-	    gcr.io/google_containers/hyperkube-amd64:v${K8S_VERSION} \
+	    gcr.io/google_containers/hyperkube:v${K8S_VERSION} \
 	    /hyperkube kubelet \
 	        --containerized \
 	        --hostname-override="127.0.0.1" \
@@ -146,7 +148,7 @@ function bootstrap_k8s() {
 	        --cluster-domain=cluster.local \
 	        --allow-privileged=true --v=10
 
-	docker run \
+	sudo docker run \
 		-d \
 		--net=host \
 		--privileged \

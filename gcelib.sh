@@ -25,7 +25,7 @@ function ensure_gcloud_or_install() {
     	ensure_cmd_or_install_package_apt curl curl
     	log warn Google Cloud SDK not available. Attempting to install. 
     	export CLOUDSDK_CORE_DISABLE_PROMPTS=1
-    	(curl https://sdk.cloud.google.com | bash) || die "Could not install Google Cloud SDK"
+    	(curl https://sdk.cloud.google.com | sudo bash) || die "Could not install Google Cloud SDK"
     }
 }
 
