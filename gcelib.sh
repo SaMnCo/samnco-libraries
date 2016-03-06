@@ -23,9 +23,6 @@ FACILITY=${FACILITY:-"local0"}
 LOGTAG=${LOGTAG:-"unknown"}
 MIN_LOG_LEVEL=${MIN_LOG_LEVEL:-"debug"}
 
-BASHLIB="00_bashlib.sh"
-find ${MYDIR}/.. -name "${BASHLIB}" -exec source {} \;
-
 # Check if we are sudoer or not
 [ $(bash::lib::is_sudoer) -eq 0 ] && bash::lib::die "You must be root or sudo to run this script"
 
