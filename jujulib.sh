@@ -82,12 +82,12 @@ function juju::lib::deploy_to() {
 }
 
 # Alias to add a relation
-function juju::lib::add-relation() {
+function juju::lib::add_relation() {
     local SERVICE_1="$1"
     shift
     local SERVICE_2="$1"
 
-    juju add_relation "${SERVICE_1}" "${SERVICE_2}" 2>/dev/null \
+    juju add-relation "${SERVICE_1}" "${SERVICE_2}" 2>/dev/null \
       && bash::lib::log debug Successfully created relation between ${SERVICE_1} and ${SERVICE_2} \
       || bash::lib::log crit Could not create relation between ${SERVICE_1} and ${SERVICE_2} 
 }
