@@ -5,52 +5,58 @@
 #
 # Notes: 
 # 
-# Maintainer: Samuel Cozannet <samuel@blended.io>, http://blended.io 
+# Maintainer: Samuel Cozannet <samnco@gmail.com> 
 #
 #####################################################################
+
+# Validating I am running on debian-like OS
+[ -f /etc/debian_version ] || {
+    echo "We are not running on a Debian-like system. Exiting..."
+    exit 0
+}
 
 # Load Configuration
 MYNAME="$(readlink -f "$0")"
 MYDIR="$(dirname "${MYNAME}")"
 
-[ -z ${FACILITY} ] && FACILITY="local0"
-[ -z ${LOGTAG} ] && LOGTAG="unknown"
-[ -z ${MIN_LOG_LEVEL} ] && MIN_LOG_LEVEL="debug"
+FACILITY=${FACILITY:-"local0"}
+LOGTAG=${LOGTAG:-"unknown"}
+MIN_LOG_LEVEL=${MIN_LOG_LEVEL:-"debug"}
 
 # Set of commands to emulate try / catch in bash
 # usage described on http://stackoverflow.com/questions/22009364/is-there-a-try-catch-command-in-bash
-function try()
+function bash::lib::try()
 {
     [[ $- = *e* ]]; SAVED_OPT_E=$?
     set +e
 }
 
-function throw()
+function bash::lib::throw()
 {
     exit $1
 }
 
-function catch()
+function bash::lib::catch()
 {
     export EX_CODE=$?
     (( $SAVED_OPT_E )) && set +e
     return $EX_CODE
 }
 
-function throwErrors()
+function bash::lib::throwErrors()
 {
     set -e
 }
 
-function ignoreErrors()
+function bash::lib::ignoreErrors()
 {
     set +e
 }
 
 # Log to syslog and echo log line
-# usage logger <syslog level> <log line>
+# usage bash::lib::log <syslog level> <log line>
 # See https://en.wikipedia.org/wiki/Syslog for more information
-function log() {
+function bash::lib::log() {
     local LOGLEVEL=$1
     if [ "x${LOGLEVEL}" = "x" ] ; then
         LOGLEVEL=${MIN_LOG_LEVEL}
@@ -68,56 +74,56 @@ function log() {
 }
 
 # Dies elegantly with an error log
-# usage die <log line>
+# usage bash::lib::die <log line>
 # See https://en.wikipedia.org/wiki/Syslog for more information
-function die() {
+function bash::lib::die() {
 	local LOGLINE="$*"
-	log err ${LOGLINE}. Exiting
+	bash::lib::log err ${LOGLINE}. Exiting
 	exit 0
 }
 
 # ensure_cmd_or_install_package_apt: Test if command is available or install matching package
 # usage ensure_cmd_or_install_package_apt <cmd name> <pkg name>
-function ensure_cmd_or_install_package_apt() {
+function bash::lib::ensure_cmd_or_install_package_apt() {
     local CMD=$1
     shift
     local PKG=$*
     hash $CMD 2>/dev/null || { 
-    	log warn $CMD not available. Attempting to install $PKG
-    	(sudo apt-get update && sudo apt-get install -yqq ${PKG}) || die "Could not find $PKG"
+    	bash::lib::log warn $CMD not available. Attempting to install $PKG
+    	(sudo apt-get update && sudo apt-get install -yqq ${PKG}) || bash::lib::die "Could not find $PKG"
     }
 }
 
 # ensure_cmd_or_install_from_curl: Test if command is available or install from URL
 # usage ensure_cmd_or_install_from_curl <cmd name> <URL>
-function ensure_cmd_or_install_from_curl() {
+function bash::lib::ensure_cmd_or_install_from_curl() {
     local CMD=$1
     shift
     local URL="$1"
     hash $CMD 2>/dev/null || { 
-    	ensure_cmd_or_install_package_apt curl curl
-    	log warn ${CMD} not available. Attempting to install from ${URL}
+    	bash::lib::ensure_cmd_or_install_package_apt curl curl
+    	bash::lib::log warn ${CMD} not available. Attempting to install from ${URL}
     	curl -sL "${URL}" --output "${CMD}" \
     		&& chmod 755 "${CMD}" \
     		&& sudo mv "${CMD}" /usr/local/bin/ \
-    		|| die "Could not find $PKG"
+    		|| bash::lib::die "Could not find $PKG"
     }
 }
 
-function ensure_cmd_or_install_package_npm() {
+function bash::lib::ensure_cmd_or_install_package_npm() {
     local CMD=$1
     shift
     local PKG=$*
-	ensure_cmd_or_install_package_apt npm nodejs npm
+	bash::lib::ensure_cmd_or_install_package_apt npm nodejs npm
 
     hash $CMD 2>/dev/null || { 
-    	log warn $CMD not available. Attempting to install $PKG via npm
-    	sudo npm install -f -q -y -g "${PKG}" || die "Could not find $PKG"
+    	bash::lib::log warn $CMD not available. Attempting to install $PKG via npm
+    	sudo npm install -f -q -y -g "${PKG}" || bash::lib::die "Could not find $PKG"
     }
 }
 
 # Test is a user is sudoer or not. echos 0 if no, and 1 if no. 
-function is_sudoer() {
+function bash::lib::is_sudoer() {
     CAN_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
     if [ ${CAN_RUN_SUDO} -gt 0 ]
     then
