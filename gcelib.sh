@@ -32,6 +32,9 @@ for file in "${MYLIB}" ; do
 	}
 done 
 
+# Check if we are sudoer or not
+[ $(is_sudoer) -eq 0 ] && die "You must be root or sudo to run this script"
+
 # Test if Google Cloud SDK is installed or installs it silently
 # usage ensure_gcloud_or_install
 function gce::lib::ensure_gcloud_or_install() {
@@ -40,8 +43,7 @@ function gce::lib::ensure_gcloud_or_install() {
     	bash::lib::ensure_cmd_or_install_package_apt curl curl
     	bash::lib::log warn Google Cloud SDK not available. Attempting to install. 
     	export CLOUDSDK_CORE_DISABLE_PROMPTS=1
-    	(curl https://sdk.cloud.google.com | bash) || bash::lib::die "Could not install Google Cloud SDK"
-    }
+    	(curl https://sdk.cloud.google.com | bash) || bash::lib::die "Could not install Google Cloud SDK"    }
 }
 
 function gce::lib::switch_project() {
@@ -59,8 +61,12 @@ function gce::lib::switch_gke_cluster() {
 	local CLUSTER="$1"
 	# Use App Cluster
 	# Use this cluster & set creds for k8s
-	gcloud config set container/cluster "${CLUSTER}"
-	gcloud container clusters get-credentials "${CLUSTER}"
+    gcloud config set container/cluster -q "${CLUSTER}" \
+        && log info Selected ${CLUSTER} as current GKE cluster \
+        || die Could not switch current GKE cluster
+    gcloud container clusters get-credentials  -q "${CLUSTER}" \
+        && log info Set kubectl credentials for ${CLUSTER} \
+        || die Could not set kubectl credentials for ${CLUSTER}
 }
 
 # Create a volume in Google Cloud based on a description json file

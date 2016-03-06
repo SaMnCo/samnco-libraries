@@ -18,6 +18,7 @@
 # Load Configuration
 MYNAME="$(readlink -f "$0")"
 MYDIR="$(dirname "${MYNAME}")"
+LOCAL_K8S_VERSION=1.1.3
 
 FACILITY=${FACILITY:-"local0"}
 LOGTAG=${LOGTAG:-"unknown"}
@@ -43,12 +44,12 @@ function bash::lib::catch()
     return $EX_CODE
 }
 
-function bash::lib::throwErrors()
+function bash::lib::throw_errors()
 {
     set -e
 }
 
-function bash::lib::ignoreErrors()
+function bash::lib::ignore_errors()
 {
     set +e
 }
@@ -122,6 +123,18 @@ function bash::lib::ensure_cmd_or_install_package_npm() {
     }
 }
 
+function bash::lib::ensure_cmd_or_install_kubectl() {
+    local CMD=kubectl
+
+    [ -z ${K8S_VERSION} ] && K8S_VERSION=${LOCAL_K8S_VERSION}
+    hash $CMD 2>/dev/null || {
+        bash::lib::log warn $CMD not available. Attempting to install...
+        wget http://storage.googleapis.com/kubernetes-release/release/v${K8S_VERSION}/bin/linux/amd64/kubectl
+        chmod 755 kubectl
+        sudo mv kubectl /usr/local/bin/
+    }
+}
+
 # Test is a user is sudoer or not. echos 0 if no, and 1 if no. 
 function bash::lib::is_sudoer() {
     CAN_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
@@ -132,3 +145,14 @@ function bash::lib::is_sudoer() {
         echo 0
     fi
 }
+
+function get_ubuntu_codename() {
+    lsb_release -a 2>/dev/null | grep Codename | awk '{ print $2 }'
+}
+
+function get_ubuntu_version() {
+    lsb_release -a 2>/dev/null | grep Release | awk '{ print $2 }'
+}
+
+# Check if we are sudoer or not
+[ $(bash::lib::is_sudoer) -eq 0 ] && bash::lib::die "You must be root or sudo to run this script"

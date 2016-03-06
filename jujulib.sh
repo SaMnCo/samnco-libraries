@@ -31,8 +31,11 @@ for file in "${MYLIB}" ; do
 	}
 done 
 
+# Check if we are sudoer or not
+[ $(bash::lib::is_sudoer) -eq 0 ] && bash::lib::die "You must be root or sudo to run this script"
+
 # Alias to switch to environment and log
-function switchenv() {
+function juju::lib::switchenv() {
     local PROJECT="$1"
 
     PROJ_EXIST="$(juju list | grep ${PROJECT} | wc -l)"
@@ -47,7 +50,7 @@ function switchenv() {
 }
 
 # Alias to deploy and log for common charms
-function deploy() {
+function juju::lib::deploy() {
     local CHARMNAME="$1"
     shift
     local SERVICENAME="$1"
@@ -66,7 +69,7 @@ function deploy() {
 }
 
 # Alias to deploy and log for common charms
-function deploy-to() {
+function juju::lib::deploy_to() {
     local CHARMNAME="$1"
     shift
     local SERVICENAME="$1"
@@ -79,18 +82,18 @@ function deploy-to() {
 }
 
 # Alias to add a relation
-function add-relation() {
+function juju::lib::add-relation() {
     local SERVICE_1="$1"
     shift
     local SERVICE_2="$1"
 
-    juju add-relation "${SERVICE_1}" "${SERVICE_2}" 2>/dev/null \
+    juju add_relation "${SERVICE_1}" "${SERVICE_2}" 2>/dev/null \
       && bash::lib::log debug Successfully created relation between ${SERVICE_1} and ${SERVICE_2} \
       || bash::lib::log crit Could not create relation between ${SERVICE_1} and ${SERVICE_2} 
 }
 
 # Alias to add unit
-function add-unit() {
+function juju::lib::add_unit() {
     local SERVICE="$1"
     shift
     local NEW_UNITS="$1"
@@ -100,10 +103,10 @@ function add-unit() {
     juju add-unit "${SERVICE}" -n "${NEW_UNITS}" 2>/dev/null \
       && bash::lib::log debug Successfully added ${NEW_UNITS} units of ${SERVICE} \
       || bash::lib::log warn Could not add ${NEW_UNITS} units of ${SERVICE} 
-}
+}juju::lib::
 
 # Alias to expose service
-function expose() {
+function juju::lib::expose() {
     local SERVICE="$1"
     
     juju expose "${SERVICE}" 2>/dev/null \
@@ -111,7 +114,7 @@ function expose() {
       || bash::lib::log warn Could not expose ${SERVICE} 
 }
 
-function get-status() {
+function juju::lib::get_status() {
     local SERVICE="$1"
     juju status ${SERVICE} --format=tabular | grep ${SERVICE} | awk '{ print $2 }' | head -n1
 }
