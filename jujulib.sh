@@ -109,3 +109,8 @@ function juju::lib::get_status() {
     local SERVICE="$1"
     juju status ${SERVICE} --format=tabular | grep ${SERVICE} | awk '{ print $2 }' | head -n1
 }
+
+function juju::lib::get_service_info() {
+    local SERVICE="$1"
+    juju status ${SERVICE} --format=tabular | grep ${SERVICE} | awk '{ print $6, $5 }' | head -n1
+}
