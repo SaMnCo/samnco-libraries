@@ -15,6 +15,9 @@
     exit 0
 }
 
+# Check if we are sudoer or not
+[ $(bash::lib::is_sudoer) -eq 0 ] && bash::lib::die "You must be root or sudo to run this script"
+
 # Load Configuration
 MYNAME="$(readlink -f "$0")"
 MYDIR="$(dirname "${MYNAME}")"
@@ -22,9 +25,6 @@ MYDIR="$(dirname "${MYNAME}")"
 FACILITY=${FACILITY:-"local0"}
 LOGTAG=${LOGTAG:-"unknown"}
 MIN_LOG_LEVEL=${MIN_LOG_LEVEL:-"debug"}
-
-# Check if we are sudoer or not
-[ $(bash::lib::is_sudoer) -eq 0 ] && bash::lib::die "You must be root or sudo to run this script"
 
 # Test if Google Cloud SDK is installed or installs it silently
 # usage ensure_gcloud_or_install
@@ -34,7 +34,8 @@ function gce::lib::ensure_gcloud_or_install() {
     	bash::lib::ensure_cmd_or_install_package_apt curl curl
     	bash::lib::log warn Google Cloud SDK not available. Attempting to install. 
     	export CLOUDSDK_CORE_DISABLE_PROMPTS=1
-    	(curl https://sdk.cloud.google.com | bash) || bash::lib::die "Could not install Google Cloud SDK"    }
+    	(curl https://sdk.cloud.google.com | bash) || bash::lib::die "Could not install Google Cloud SDK"    
+    }
 }
 
 function gce::lib::switch_project() {
@@ -160,8 +161,8 @@ function gce::lib::create_gcloud_disk() {
 
 	# Finally running creation command
 	gcloud compute disks create ${GCLOUDCMD} \
-		1>/dev/null 2>/dev/null \
-		&& bash::lib::log info Successfully created disk ${DISKNAME} \
-		|| bash::lib::die Could not create disk ${DISKNAME}. Exiting. 
+		1>/dev/null 2>/dev/null && \
+		bash::lib::log info Successfully created disk ${DISKNAME} || \
+		bash::lib::die Could not create disk ${DISKNAME}. Exiting. 
 }
 

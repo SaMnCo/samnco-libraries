@@ -15,15 +15,15 @@
     exit 0
 }
 
+# Check if we are sudoer or not
+[ $(bash::lib::is_sudoer) -eq 0 ] && bash::lib::die "You must be root or sudo to run this script"
+
 # Load Configuration
 MYNAME="$(readlink -f "$0")"
 MYDIR="$(dirname "${MYNAME}")"
 FACILITY=${FACILITY:-"local0"}
 LOGTAG=${LOGTAG:-"unknown"}
 MIN_LOG_LEVEL=${MIN_LOG_LEVEL:-"debug"}
-
-# Check if we are sudoer or not
-[ $(bash::lib::is_sudoer) -eq 0 ] && bash::lib::die "You must be root or sudo to run this script"
 
 # Alias to switch to environment and log
 function juju::lib::switchenv() {
@@ -94,7 +94,7 @@ function juju::lib::add_unit() {
     juju add-unit "${SERVICE}" -n "${NEW_UNITS}" 2>/dev/null \
       && bash::lib::log debug Successfully added ${NEW_UNITS} units of ${SERVICE} \
       || bash::lib::log warn Could not add ${NEW_UNITS} units of ${SERVICE} 
-}juju::lib::
+}
 
 # Alias to expose service
 function juju::lib::expose() {
@@ -114,3 +114,4 @@ function juju::lib::get_service_info() {
     local SERVICE="$1"
     juju status ${SERVICE} --format=tabular | grep ${SERVICE} | awk '{ print $6, $5 }' | head -n1
 }
+
