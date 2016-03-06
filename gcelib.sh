@@ -33,7 +33,7 @@ for file in "${MYLIB}" ; do
 done 
 
 # Check if we are sudoer or not
-[ $(is_sudoer) -eq 0 ] && die "You must be root or sudo to run this script"
+[ $(bash::lib::is_sudoer) -eq 0 ] && bash::lib::die "You must be root or sudo to run this script"
 
 # Test if Google Cloud SDK is installed or installs it silently
 # usage ensure_gcloud_or_install
