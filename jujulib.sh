@@ -22,14 +22,8 @@ FACILITY=${FACILITY:-"local0"}
 LOGTAG=${LOGTAG:-"unknown"}
 MIN_LOG_LEVEL=${MIN_LOG_LEVEL:-"debug"}
 
-MYLIB="${MYDIR}/bashlib.sh"
-
-for file in "${MYLIB}" ; do
-	[ -f ${file} ] && source ${file} || { 
-		echo "Could not find required file. Exiting..."
-		exit 1
-	}
-done 
+BASHLIB="00_bashlib.sh"
+find ${MYDIR}/.. -name "${BASHLIB}" -exec source {} 
 
 # Check if we are sudoer or not
 [ $(bash::lib::is_sudoer) -eq 0 ] && bash::lib::die "You must be root or sudo to run this script"
