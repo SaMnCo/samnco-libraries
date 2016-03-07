@@ -117,5 +117,12 @@ function juju::lib::get_service_info() {
 
 function juju::lib::get_service_ip_addresses() {
     local SERVICE="$1"
-    juju status --format json  "${SERVICE}" | jq '.machines[]."dns-name"' | tr -d "\""
+    case "${SERVICE}" in 
+      "all" )
+        juju status --format json | jq '.machines[]."dns-name"' | tr -d "\""
+        ;;
+      * )
+        juju status --format json  "${SERVICE}" | jq '.machines[]."dns-name"' | tr -d "\""
+        ;;
+    esac
 }
