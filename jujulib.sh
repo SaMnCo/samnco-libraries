@@ -115,3 +115,7 @@ function juju::lib::get_service_info() {
     juju status ${SERVICE} --format=tabular | grep ${SERVICE} | awk '{ print $6, $5 }' | head -n1
 }
 
+function juju::lib::get_service_ip_addresses() {
+    local SERVICE="$1"
+    juju status --format json  "${SERVICE}" | jq '.machines[]."dns-name"' | tr -d "\""
+}
