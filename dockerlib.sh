@@ -206,6 +206,7 @@ function docker::lib::build_node_project() {
 		-f "$(find "${PROJECT_FOLDER}" -name Dockerfile.${DEFAULT_OS}.${DEFAULT_NODE_VERSION})" \
 		-t ${PROJECT_ID}/${DOCKER_NAME}:${DEFAULT_OS}-${DOCKER_VERSION} \
 		"${PROJECT_FOLDER}" 2>/dev/null 1>/dev/null && \
+		rm -f "${PROJECT_FOLDER}/.npmrc"
 	bash::lib::log info Successfully build image for ${DOCKER_NAME} || \
 	bash::lib::die Could not build image for ${DOCKER_NAME}
 }
