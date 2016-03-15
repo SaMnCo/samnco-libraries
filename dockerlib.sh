@@ -29,7 +29,7 @@ MIN_LOG_LEVEL=${MIN_LOG_LEVEL:-"debug"}
 # Check if we are sudoer or not
 [ $(bash::lib::is_sudoer) -eq 0 ] && bash::lib::die "You must be root or sudo to run this script"
 
-UBUNTU_CODENAME="$(get_ubuntu_codename)"
+UBUNTU_CODENAME="$(bash::lib::get_ubuntu_codename)"
 
 case ${UBUNTU_CODENAME} in
 	precise )
