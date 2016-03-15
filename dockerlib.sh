@@ -134,6 +134,8 @@ function docker::lib::docker_cleanup() {
 
 }
 
+# docker::lib::bootstrap_k8s : bootstraps a local Kubernets cluster
+# Usage: docker::lib::bootstrap_k8s
 function docker::lib::bootstrap_k8s() {
 	[ -z ${K8S_VERSION} ] && K8S_VERSION=1.1.3
 	[ -z ${ETCD_VERSION} ] && ETCD_VERSION=2.0.12
@@ -177,6 +179,56 @@ function docker::lib::bootstrap_k8s() {
 	bash::lib::log info Successfully bootstrapped k8s locally. You can now use kubectl || \
 	bash::lib::die "Could not bootstrap k8s. Please investigate log files"
 
+}
+
+# Build image for nodejs container locally
+# Usage: build_node_project path/to/nodejs/project/folder
+# Notes: 
+#   - This assumes a subfolder containers the Dockerfiles. 
+# 	- This subfolder is a submodule using https://github.com/SaMnCo/node-dockerfiles
+function docker::lib::build_node_project() {
+	local PROJECT_FOLDER="$1"
+
+	local DOCKER_NAME=$(cat "${PROJECT_FOLDER}/package.json" | jq '.name' | tr -d '"')
+	local DOCKER_VERSION=$(cat "${PROJECT_FOLDER}/package.json" | jq '.version' | tr -d '"')
+
+	bash::lib::log debug Building latest Docker image for ${DOCKER_NAME}
+
+	[ -z ${NPM_TOKEN} ] && \
+		bash::lib::die "NPM_TOKEN not set. Cannot download from private repositories"
+	
+	docker build \
+		--quiet \
+		--rm \
+		--build-arg NPM_TOKEN=${NPM_TOKEN} \
+		-f "$(find "${PROJECT_FOLDER}" -name Dockerfile.${DEFAULT_OS}.${DEFAULT_NODE_VERSION})" \
+		-t ${PROJECT_ID}/${DOCKER_NAME}:${DEFAULT_OS}-${DOCKER_VERSION} \
+		"${PROJECT_FOLDER}" 2>/dev/null 1>/dev/null && \
+	bash::lib::log info Successfully build image for ${DOCKER_NAME} || \
+	bash::lib::die Could not build image for ${DOCKER_NAME}
+}
+
+# docker::lib::push_to_gke_registry: Adds a tag to push to GKE then pushes. 
+# Usage: docker::lib::add_tag_for_gke <image/name:version>
+# Notes: 
+# 	- will use the DEFAULT_REGISTRY set in configuration file 
+# 	- will use the PROJECT_ID set in configuration file
+function docker::lib::push_to_gke_registry() {
+	local ORIGIN="$1"
+
+	docker tag \
+		"${ORIGIN}" \
+		"${DEFAULT_REGISTRY}/${ORIGIN}" 2>/dev/null 1>/dev/null && \
+	bash::lib::log info Successfully tagged image ${ORIGIN} for ${DEFAULT_REGISTRY} || \
+	bash::lib::die Could not tag image ${ORIGIN} for ${DEFAULT_REGISTRY}
+
+	gcloud docker push "${DEFAULT_REGISTRY}/${ORIGIN}" 2>/dev/null 1>/dev/null && \
+	bash::lib::log info Successfully pushed image ${ORIGIN} to ${DEFAULT_REGISTRY} || \
+	bash::lib::die Could not push image ${ORIGIN} to ${DEFAULT_REGISTRY}
+
+	docker rmi -f "${DEFAULT_REGISTRY}/${ORIGIN}" 2>/dev/null 1>/dev/null && \
+	bash::lib::log info Successfully deleted "${DEFAULT_REGISTRY}/${ORIGIN}" || \
+	bash::lib::die Could not delete "${DEFAULT_REGISTRY}/${ORIGIN}"
 }
 
 # function switch_docker_cluster() {
