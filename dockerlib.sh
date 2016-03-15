@@ -206,9 +206,27 @@ function docker::lib::build_node_project() {
 		-f "$(find "${PROJECT_FOLDER}" -name Dockerfile.${DEFAULT_OS}.${DEFAULT_NODE_VERSION})" \
 		-t ${PROJECT_ID}/${DOCKER_NAME}:${DEFAULT_OS}-${DOCKER_VERSION} \
 		"${PROJECT_FOLDER}" 2>/dev/null 1>/dev/null && \
-		rm -f "${PROJECT_FOLDER}/.npmrc"
+		rm -f "${PROJECT_FOLDER}/.npmrc" && \
 	bash::lib::log info Successfully build image for ${DOCKER_NAME} || \
 	bash::lib::die Could not build image for ${DOCKER_NAME}
+}
+
+function docker::lib::build_project() {
+    local PROJECT_FOLDER="$1"
+
+    local DOCKER_NAME=$(cat "${PROJECT_FOLDER}/package.json" | jq '.name' | tr -d '"')
+    local DOCKER_VERSION=$(cat "${PROJECT_FOLDER}/package.json" | jq '.version' | tr -d '"')
+
+    bash::lib::log debug Building latest Docker image for ${DOCKER_NAME}
+
+    docker build \
+        --quiet \
+        --rm \
+        -f "$(find "${PROJECT_FOLDER}" -name Dockerfile)" \
+        -t ${PROJECT_ID}/${DOCKER_NAME}:${DEFAULT_OS}-${DOCKER_VERSION} \
+        "${PROJECT_FOLDER}" 2>/dev/null 1>/dev/null && \
+    bash::lib::log info Successfully build image for ${DOCKER_NAME} || \
+    bash::lib::die Could not build image for ${DOCKER_NAME}
 }
 
 # docker::lib::push_to_gke_registry: Adds a tag to push to GKE then pushes. 
