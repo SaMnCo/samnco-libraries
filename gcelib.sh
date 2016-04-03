@@ -54,11 +54,11 @@ function gce::lib::switch_gke_cluster() {
 	# Use App Cluster
 	# Use this cluster & set creds for k8s
     gcloud config set container/cluster -q "${CLUSTER}" \
-        && log info Selected ${CLUSTER} as current GKE cluster \
-        || die Could not switch current GKE cluster
+        && bash::lib::log info Selected ${CLUSTER} as current GKE cluster \
+        || bash::lib::die Could not switch current GKE cluster
     gcloud container clusters get-credentials  -q "${CLUSTER}" \
-        && log info Set kubectl credentials for ${CLUSTER} \
-        || die Could not set kubectl credentials for ${CLUSTER}
+        && bash::lib::log info Set kubectl credentials for ${CLUSTER} \
+        || bash::lib::die Could not set kubectl credentials for ${CLUSTER}
 }
 
 # Create a volume in Google Cloud based on a description json file
