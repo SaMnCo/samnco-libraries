@@ -241,7 +241,7 @@ function docker::lib::build_project() {
 function docker::lib::push_to_gke_registry() {
 	local ORIGIN="$1"
 
-	docker tag \
+	docker tag -f \
 		"${ORIGIN}" \
 		"${DEFAULT_REGISTRY}/${ORIGIN}" 2>/dev/null 1>/dev/null && \
 	bash::lib::log info Successfully tagged image ${ORIGIN} for ${DEFAULT_REGISTRY} || \
