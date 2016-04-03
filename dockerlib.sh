@@ -197,7 +197,7 @@ function docker::lib::build_node_project() {
 	[ -z ${NPM_TOKEN} ] && \
 		bash::lib::die "NPM_TOKEN not set. Cannot download from private repositories"
 
-	find ${PROJECT_FOLDER} -name ".npmrc" -exec cp {} ${PROJECT_FOLDER}/ \;
+	find ${PROJECT_FOLDER} -name ".npmrc" -exec cp -f {} ${PROJECT_FOLDER}/ \;
 	
 	docker build \
 		--quiet \
