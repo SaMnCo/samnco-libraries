@@ -189,6 +189,8 @@ function docker::lib::bootstrap_k8s() {
 function docker::lib::build_node_project() {
 	local PROJECT_FOLDER="$1"
 
+    [ -f "${PROJECT_FOLDER}/package.json" ] || bash::lib::die Could not locate package.json for ${PROJECT_FOLDER}
+    
 	local DOCKER_NAME=$(cat "${PROJECT_FOLDER}/package.json" | jq '.name' | tr -d '"')
 	local DOCKER_VERSION=$(cat "${PROJECT_FOLDER}/package.json" | jq '.version' | tr -d '"')
 
@@ -214,6 +216,8 @@ function docker::lib::build_node_project() {
 function docker::lib::build_project() {
     local PROJECT_FOLDER="$1"
 
+    [ -f "${PROJECT_FOLDER}/package.json" ] || bash::lib::die Could not locate package.json for ${PROJECT_FOLDER}
+    
     local DOCKER_NAME=$(cat "${PROJECT_FOLDER}/package.json" | jq '.name' | tr -d '"')
     local DOCKER_VERSION=$(cat "${PROJECT_FOLDER}/package.json" | jq '.version' | tr -d '"')
 
@@ -247,9 +251,9 @@ function docker::lib::push_to_gke_registry() {
 	bash::lib::log info Successfully pushed image ${ORIGIN} to ${DEFAULT_REGISTRY} || \
 	bash::lib::die Could not push image ${ORIGIN} to ${DEFAULT_REGISTRY}
 
-	docker rmi -f "${DEFAULT_REGISTRY}/${ORIGIN}" 2>/dev/null 1>/dev/null && \
-	bash::lib::log info Successfully deleted "${DEFAULT_REGISTRY}/${ORIGIN}" || \
-	bash::lib::die Could not delete "${DEFAULT_REGISTRY}/${ORIGIN}"
+	#docker rmi -f "${DEFAULT_REGISTRY}/${ORIGIN}" 2>/dev/null 1>/dev/null && \
+	#bash::lib::log info Successfully deleted "${DEFAULT_REGISTRY}/${ORIGIN}" || \
+	#bash::lib::die Could not delete "${DEFAULT_REGISTRY}/${ORIGIN}"
 }
 
 # function switch_docker_cluster() {
