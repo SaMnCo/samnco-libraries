@@ -146,12 +146,37 @@ function bash::lib::is_sudoer() {
     fi
 }
 
+# get_ubuntu_codename: reports the name of the distro (14.04 => Trusty)
 function bash::lib::get_ubuntu_codename() {
     lsb_release -a 2>/dev/null | grep Codename | awk '{ print $2 }'
 }
 
+# get_ubuntu_version: get the version of Ubuntu (14.04, 16.04...)
 function bash::lib::get_ubuntu_version() {
     lsb_release -a 2>/dev/null | grep Release | awk '{ print $2 }'
+}
+
+# add_to_library_path: adds a path to the library path
+# Usage: add_to_library_path /path/to/add
+function bash::lib::add_to_library_path() {
+    local ADD_PATH=$1
+    local LIB_NAME="$(echo ${ADD_PATH} | cut -f2- -d'/' | tr '/' '_')"
+    echo ${ADD_PATH} | sudo tee /etc/ld.so.conf.d/${LIB_NAME}.conf
+    ldconfig
+
+    echo "export LD_LIBRARY_PATH='${LD_LIBRARY_PATH}':${ADD_PATH}" | sudo tee /etc/profile.d/${LIB_NAME}.sh
+    sudo chmod +x /etc/profile.d/${LIB_NAME}.sh
+    /etc/profile.d/${LIB_NAME}.sh
+}
+
+# add_to_library_path: adds a path to the library path
+# Usage: add_to_library_path /path/to/add
+function bash::lib::add_to_path() {
+    local ADD_PATH=$1
+    local PATH_NAME="$(echo ${ADD_PATH} | cut -f2- -d'/' | tr '/' '_')"
+    echo "export PATH='${PATH}':${ADD_PATH}" | sudo tee /etc/profile.d/${PATH_NAME}.sh
+    sudo chmod +x /etc/profile.d/${PATH_NAME}.sh
+    /etc/profile.d/${PATH_NAME}.sh
 }
 
 # Check if we are sudoer or not

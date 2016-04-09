@@ -25,6 +25,8 @@ FACILITY=${FACILITY:-"local0"}
 LOGTAG=${LOGTAG:-"unknown"}
 MIN_LOG_LEVEL=${MIN_LOG_LEVEL:-"debug"}
 
+JUJU_VERSION=$(juju version | cut -f1 -d"-")
+
 # Alias to switch to environment and log
 function juju::lib::switchenv() {
     local PROJECT="$1"
