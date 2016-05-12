@@ -38,7 +38,8 @@ case ${UBUNTU_CODENAME} in
 		case ${NEXT} in 
 			Y | y )
 				sudo ${APT_CMD} update -qq && \
-				sudo ${APT_CMD} install -yqq apparmor \
+				sudo ${APT_CMD} install -yqq ${APT_FORCE} \
+					apparmor \
 					linux-image-extra-$(uname -r) \
 					linux-image-generic-lts-trusty \
 					linux-headers-generic-lts-trusty \
@@ -53,13 +54,15 @@ case ${UBUNTU_CODENAME} in
 	trusty )
 		bash::lib::log debug Installing dependencies for ${NEXT}
 		sudo ${APT_CMD} update -qq && \
-		sudo ${APT_CMD} install -yqq apparmor \
+		sudo ${APT_CMD} install -yqq ${APT_FORCE} \
+			apparmor \
 			linux-image-extra-$(uname -r)
 	;;
 	wily )
 		bash::lib::log debug Installing dependencies for ${NEXT}
 		sudo ${APT_CMD} update -qq && \
-		sudo ${APT_CMD} install -yqq apparmor \
+		sudo ${APT_CMD} install -yqq ${APT_FORCE} \
+			apparmor \
 			linux-image-extra-$(uname -r)
 	;;
 	* )

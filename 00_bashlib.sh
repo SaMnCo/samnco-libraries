@@ -87,14 +87,17 @@ case "${PSEUDONAME}" in
     "precise" )
         # LXC_CMD=""
         APT_CMD="apt-get"
+        APT_FORCE="--force-yes"
     ;;
     "trusty" )
         LXC_CMD="$(running-in-container | grep lxc | wc -l)"
         APT_CMD="apt-get"
+        APT_FORCE="--force-yes"
     ;;
     "xenial" )
         LXC_CMD="$(systemd-detect-virt --container | grep lxc | wc -l)"
         APT_CMD="apt"
+        APT_FORCE="--allow-downgrades --allow-remove-essential --allow-change-held-packages"
     ;;
     * )
         juju-log "Your version of Ubuntu is not supported. Exiting"
@@ -178,7 +181,7 @@ function bash::lib::ensure_cmd_or_install_package_apt() {
     local PKG=$*
     hash $CMD 2>/dev/null || { 
     	bash::lib::log warn $CMD not available. Attempting to install $PKG
-    	(sudo ${APT_CMD} update && sudo ${APT_CMD} install -yqq ${PKG}) || bash::lib::die "Could not find $PKG"
+    	(sudo ${APT_CMD} update && sudo ${APT_CMD} install -yqq ${APT_FORCE} ${PKG}) || bash::lib::die "Could not find $PKG"
     }
 }
 
