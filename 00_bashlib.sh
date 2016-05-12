@@ -9,6 +9,61 @@
 #
 #####################################################################
 
+# Discovery of the OS we're running on
+OS=`lowercase \`uname\``
+KERNEL=`uname -r`
+MACH=`uname -m`
+
+if [ "${OS}" == "windowsnt" ]; then
+    OS=windows
+elif [ "${OS}" == "darwin" ]; then
+    OS=mac
+else
+    OS=`uname`
+    if [ "${OS}" = "SunOS" ] ; then
+        OS=Solaris
+        ARCH=`uname -p`
+        OSSTR="${OS} ${REV}(${ARCH} `uname -v`)"
+    elif [ "${OS}" = "AIX" ] ; then
+        OSSTR="${OS} `oslevel` (`oslevel -r`)"
+    elif [ "${OS}" = "Linux" ] ; then
+        if [ -f /etc/redhat-release ] ; then
+            DISTROBASEDON='RedHat'
+            DIST=`cat /etc/redhat-release |sed s/\ release.*//`
+            PSEUDONAME=`cat /etc/redhat-release | sed s/.*\(// | sed s/\)//`
+            REV=`cat /etc/redhat-release | sed s/.*release\ // | sed s/\ .*//`
+        elif [ -f /etc/SuSE-release ] ; then
+            DISTROBASEDON='SuSe'
+            PSEUDONAME=`cat /etc/SuSE-release | tr "\n" ' '| sed s/VERSION.*//`
+            REV=`cat /etc/SuSE-release | tr "\n" ' ' | sed s/.*=\ //`
+        elif [ -f /etc/mandrake-release ] ; then
+            DISTROBASEDON='Mandrake'
+            PSEUDONAME=`cat /etc/mandrake-release | sed s/.*\(// | sed s/\)//`
+            REV=`cat /etc/mandrake-release | sed s/.*release\ // | sed s/\ .*//`
+        elif [ -f /etc/debian_version ] ; then
+            DISTROBASEDON='Debian'
+            if [ -f /etc/lsb-release ] ; then
+                DIST=`cat /etc/lsb-release | grep '^DISTRIB_ID' | awk -F=  '{ print $2 }'`
+                PSEUDONAME=`cat /etc/lsb-release | grep '^DISTRIB_CODENAME' | awk -F=  '{ print $2 }'`
+                REV=`cat /etc/lsb-release | grep '^DISTRIB_RELEASE' | awk -F=  '{ print $2 }'`
+            fi
+        fi
+        if [ -f /etc/UnitedLinux-release ] ; then
+            DIST="${DIST}[`cat /etc/UnitedLinux-release | tr "\n" ' ' | sed s/VERSION.*//`]"
+        fi
+        OS=`lowercase $OS`
+        DISTROBASEDON=`lowercase $DISTROBASEDON`
+        readonly OS
+        readonly DIST
+        readonly DISTROBASEDON
+        readonly PSEUDONAME
+        readonly REV
+        readonly KERNEL
+        readonly MACH
+    fi
+
+fi
+
 # Validating I am running on debian-like OS
 [ -f /etc/debian_version ] || {
     echo "We are not running on a Debian-like system. Exiting..."
@@ -148,12 +203,12 @@ function bash::lib::is_sudoer() {
 
 # get_ubuntu_codename: reports the name of the distro (14.04 => Trusty)
 function bash::lib::get_ubuntu_codename() {
-    lsb_release -a 2>/dev/null | grep Codename | awk '{ print $2 }'
+    echo ${PSEUDONAME}
 }
 
 # get_ubuntu_version: get the version of Ubuntu (14.04, 16.04...)
 function bash::lib::get_ubuntu_version() {
-    lsb_release -a 2>/dev/null | grep Release | awk '{ print $2 }'
+    echo ${REV}
 }
 
 # add_to_library_path: adds a path to the library path
@@ -162,7 +217,7 @@ function bash::lib::add_to_library_path() {
     local ADD_PATH=$1
     local LIB_NAME="$(echo ${ADD_PATH} | cut -f2- -d'/' | tr '/' '_')"
     echo ${ADD_PATH} | sudo tee /etc/ld.so.conf.d/${LIB_NAME}.conf
-    ldconfig
+    sudo ldconfig
 
     echo "export LD_LIBRARY_PATH='${LD_LIBRARY_PATH}':${ADD_PATH}" | sudo tee /etc/profile.d/${LIB_NAME}.sh
     sudo chmod +x /etc/profile.d/${LIB_NAME}.sh

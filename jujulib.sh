@@ -109,7 +109,7 @@ function juju::lib::expose() {
 
 function juju::lib::get_status() {
     local SERVICE="$1"
-    juju status ${SERVICE} --format=tabular | grep ${SERVICE} | awk '{ print $2 }' | head -n1
+    juju status --format=json | jq .services.${SERVICE}."service-status".current
 }
 
 function juju::lib::get_service_info() {
@@ -128,3 +128,6 @@ function juju::lib::get_service_ip_addresses() {
         ;;
     esac
 }
+
+# Deploy to ALL services (for subordinates)
+# juju status --format json | jq '.services' | jq 'keys[]' | tr -d '"' | xargs -I '{}' juju add-relation ntp {}
