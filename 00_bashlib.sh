@@ -61,7 +61,6 @@ else
         readonly KERNEL
         readonly MACH
     fi
-
 fi
 
 # Validating I am running on debian-like OS
@@ -69,6 +68,39 @@ fi
     echo "We are not running on a Debian-like system. Exiting..."
     exit 0
 }
+
+# Setting some high level specifics depending on versions
+case "$(arch)" in
+    "x86_64" | "amd64" )
+        ARCH="x86_64"
+    ;;
+    "ppc64le" | "ppc64el" )
+        ARCH="ppc64le"
+    ;;
+    * )
+        juju-log "Your architecture is not supported. Exiting"
+        exit 1
+    ;;
+esac
+
+case "${PSEUDONAME}" in 
+    "precise" )
+        # LXC_CMD=""
+        APT_CMD="apt-get"
+    ;;
+    "trusty" )
+        LXC_CMD="$(running-in-container | grep lxc | wc -l)"
+        APT_CMD="apt-get"
+    ;;
+    "xenial" )
+        LXC_CMD="$(systemd-detect-virt --container | grep lxc | wc -l)"
+        APT_CMD="apt"
+    ;;
+    * )
+        juju-log "Your version of Ubuntu is not supported. Exiting"
+        exit 1
+    ;;
+esac
 
 # Load Configuration
 MYNAME="$(readlink -f "$0")"
@@ -146,7 +178,7 @@ function bash::lib::ensure_cmd_or_install_package_apt() {
     local PKG=$*
     hash $CMD 2>/dev/null || { 
     	bash::lib::log warn $CMD not available. Attempting to install $PKG
-    	(sudo apt-get update && sudo apt-get install -yqq ${PKG}) || bash::lib::die "Could not find $PKG"
+    	(sudo ${APT_CMD} update && sudo ${APT_CMD} install -yqq ${PKG}) || bash::lib::die "Could not find $PKG"
     }
 }
 

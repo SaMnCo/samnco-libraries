@@ -37,8 +37,8 @@ case ${UBUNTU_CODENAME} in
 		read NEXT
 		case ${NEXT} in 
 			Y | y )
-				sudo apt-get update -qq && \
-				sudo apt-get install -yqq apparmor \
+				sudo ${APT_CMD} update -qq && \
+				sudo ${APT_CMD} install -yqq apparmor \
 					linux-image-extra-$(uname -r) \
 					linux-image-generic-lts-trusty \
 					linux-headers-generic-lts-trusty \
@@ -52,14 +52,14 @@ case ${UBUNTU_CODENAME} in
 	;;
 	trusty )
 		bash::lib::log debug Installing dependencies for ${NEXT}
-		sudo apt-get update -qq && \
-		sudo apt-get install -yqq apparmor \
+		sudo ${APT_CMD} update -qq && \
+		sudo ${APT_CMD} install -yqq apparmor \
 			linux-image-extra-$(uname -r)
 	;;
 	wily )
 		bash::lib::log debug Installing dependencies for ${NEXT}
-		sudo apt-get update -qq && \
-		sudo apt-get install -yqq apparmor \
+		sudo ${APT_CMD} update -qq && \
+		sudo ${APT_CMD} install -yqq apparmor \
 			linux-image-extra-$(uname -r)
 	;;
 	* )
@@ -73,12 +73,12 @@ function docker::lib::ensure_docker_or_install() {
     hash $CMD 2>/dev/null || {
     	bash::lib::ensure_cmd_or_install_package_apt curl curl
     	bash::lib::log warn Docker not available. Attempting to install. 
-    	sudo apt-get update -qq && \
-    	sudo apt-get install -yqq apt-transport-https ca-certificates linux-image-extra-$(uname -r)
+    	sudo ${APT_CMD} update -qq && \
+    	sudo ${APT_CMD} install -yqq apt-transport-https ca-certificates linux-image-extra-$(uname -r)
     	sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys "${DOCKER_KEY}"
     	echo "deb https://apt.dockerproject.org/repo ubuntu-${UBUNTU_CODENAME} main" > /etc/apt/sources.list.d/docker.list 
-    	sudo apt-get update -qq && \
-    	sudo apt-get install -yqq docker-engine && \
+    	sudo ${APT_CMD} update -qq && \
+    	sudo ${APT_CMD} install -yqq docker-engine && \
     	sudo groupadd -f docker && \
     	sudo usermod -aG docker ${USER} && \
     	# newgrp ${USER}
