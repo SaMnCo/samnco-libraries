@@ -30,5 +30,11 @@ MIN_LOG_LEVEL=${MIN_LOG_LEVEL:-"debug"}
 function charm::lib::self_assessment) {
 	[ -z ${JUJU_CONTEXT_ID+x} ] && \
 		echo 0 || \
-		cat "${JUJU_CHARM_DIR}/metadata.yaml" | grep 'name' | head -n1 | cut -f2 -d' '
+		{
+			METADATA="$(find "${JUJU_CHARM_DIR}/../.." -name "metadata.yaml")"
+			while read line 
+			do
+				WORKLOAD+="$(cat "${line}" | grep 'name' | head -n1 | cut -f2 -d' ')"
+			done < ${METADATA}
+		}
 }
