@@ -37,4 +37,5 @@ function charm::lib::self_assessment) {
 				WORKLOAD+="$(cat "${line}" | grep 'name' | head -n1 | cut -f2 -d' ')"
 			done < ${METADATA}
 		}
+	echo "${WORKLOAD}"
 }
