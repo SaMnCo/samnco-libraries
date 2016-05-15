@@ -73,6 +73,7 @@ fi
 case "$(arch)" in
     "x86_64" | "amd64" )
         ARCH="x86_64"
+        ARCH_ALT="amd64"
     ;;
     "ppc64le" | "ppc64el" )
         ARCH="ppc64le"
