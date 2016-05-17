@@ -41,10 +41,10 @@ function charm::lib::self_assessment()) {
 }
 
 function charm::lib::get_templates()) {
-	[ -d "/opt/ops-templates" ] && { 
-		cd /opt/ops-templates 
+	[ -d "/opt/templates" ] && { 
+		cd /opt/templates 
 		git pull origin master
 	} || {
-		git clone https://github.com/SaMnCo/ops-templates.git /opt/ops-templates
+		git clone https://github.com/SaMnCo/ops-templates.git /opt/templates
 	}
 }
