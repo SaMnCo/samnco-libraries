@@ -27,7 +27,7 @@ MIN_LOG_LEVEL=${MIN_LOG_LEVEL:-"debug"}
 
 # charm::lib::self_assessment
 # Test if running inside of a charm hook and, if yes, returns the name of the charm. Otherwise returns 0
-function charm::lib::self_assessment()) {
+function charm::lib::self_assessment() {
 	[ -z ${JUJU_CONTEXT_ID+x} ] && \
 		echo 0 || \
 		{
@@ -40,7 +40,7 @@ function charm::lib::self_assessment()) {
 	echo "${WORKLOAD}"
 }
 
-function charm::lib::get_templates()) {
+function charm::lib::get_templates() {
 	local INSTALL_DIR="$1"
 
 	[ -d "${INSTALL_DIR}" ] && { 
@@ -49,4 +49,8 @@ function charm::lib::get_templates()) {
 	} || {
 		git clone https://github.com/SaMnCo/ops-templates.git "${INSTALL_DIR}"
 	}
+}
+
+function charm::lib::who_am_i() {
+	cat "${JUJU_CHARM_DIR}/metadata.yaml" | grep 'name' | head -n1 | cut -f2 -d' '
 }
