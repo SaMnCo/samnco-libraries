@@ -27,7 +27,7 @@ MIN_LOG_LEVEL=${MIN_LOG_LEVEL:-"debug"}
 
 # charm::lib::self_assessment
 # Test if running inside of a charm hook and, if yes, returns the name of the charm. Otherwise returns 0
-function charm::lib::self_assessment) {
+function charm::lib::self_assessment()) {
 	[ -z ${JUJU_CONTEXT_ID+x} ] && \
 		echo 0 || \
 		{
@@ -38,4 +38,13 @@ function charm::lib::self_assessment) {
 			done < ${METADATA}
 		}
 	echo "${WORKLOAD}"
+}
+
+function charm::lib::get_templates()) {
+	[ -d "/opt/ops-templates" ] && { 
+		cd /opt/ops-templates 
+		git pull origin master
+	} || {
+		git clone https://github.com/SaMnCo/ops-templates.git /opt/ops-templates
+	}
 }
