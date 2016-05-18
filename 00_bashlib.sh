@@ -10,7 +10,7 @@
 #####################################################################
 
 # Discovery of the OS we're running on
-OS=`tr \`uname\` '[:upper:]' '[:lower:]'`
+OS=` echo \`uname\` | tr '[:upper:]' '[:lower:]'`
 KERNEL=`uname -r`
 MACH=`uname -m`
 
@@ -51,8 +51,8 @@ else
         if [ -f /etc/UnitedLinux-release ] ; then
             DIST="${DIST}[`cat /etc/UnitedLinux-release | tr "\n" ' ' | sed s/VERSION.*//`]"
         fi
-        OS=`tr $OS '[:upper:]' '[:lower:]'`
-        DISTROBASEDON=`tr $DISTROBASEDON '[:upper:]' '[:lower:]'`
+        OS=`echo $OS | tr '[:upper:]' '[:lower:]'`
+        DISTROBASEDON=`echo $DISTROBASEON | tr '[:upper:]' '[:lower:]'`
         readonly OS
         readonly DIST
         readonly DISTROBASEDON
