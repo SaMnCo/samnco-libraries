@@ -27,17 +27,13 @@ MIN_LOG_LEVEL=${MIN_LOG_LEVEL:-"debug"}
 
 # charm::lib::self_assessment
 # Test if running inside of a charm hook and, if yes, returns the name of the charm. Otherwise returns 0
-function charm::lib::self_assessment()) {
-	[ -z ${JUJU_CONTEXT_ID+x} ] && \
-		echo 0 || \
-		{
-			METADATA="$(find "${JUJU_CHARM_DIR}/../.." -name "metadata.yaml")"
-			for FILE in ${METADATA} 
-			do
-				CHARM+=" $(cat "${FILE}" | grep 'name' | head -n1 | cut -f2 -d' ')" 
-			done
-		}
-	echo "${CHARM}"
+function charm::lib::self_assessment() {
+	[ -d /var/lib/juju/agents ] || exit 1
+	for FILE in $(find "/var/lib/juju/agents" -name "metadata.yaml")
+	do
+		CHARM+=" $(cat "${FILE}" | grep 'name' | head -n1 | cut -f2 -d' ')" 
+	done
+	echo "${CHARM}" | sort | uniq
 }
 
 function charm::lib::get_templates() {
@@ -45,10 +41,32 @@ function charm::lib::get_templates() {
 
 	[ -d "${INSTALL_DIR}" ] && { 
 		cd "${INSTALL_DIR}"
-		git pull origin master
+		git pull --quiet --force origin master
 	} || {
-		git clone https://github.com/SaMnCo/ops-templates.git "${INSTALL_DIR}"
+		git clone --quiet --recursive https://github.com/SaMnCo/ops-templates.git "${INSTALL_DIR}"
 	}
+}
+
+function charm::lib::find_roles() {
+    for TARGET in $(charm::lib::self_assessment)
+    do
+        case "${CHARM}" in 
+            ceilometer | cinder | glance | heat | horizon | keystone | neutron* | nova* | openstack-dashboard )
+                juju-log "Configuring ${SOFTWARE_NAME} for ${TARGET} (OpenStack)"
+                TARGET_LIST+=" ${TARGET} openstack dmesg"
+            ;;
+            ceph* )
+                juju-log "Configuring ${SOFTWARE_NAME} for ${TARGET} (Ceph Storage)"
+                TARGET_LIST+=" ${TARGET} dmesg ceph-global"
+            ;;
+            * )
+                juju-log "Configuring ${SOFTWARE_NAME} for ${TARGET} (Generic Solution)"
+                TARGET_LIST+=" ${TARGET}"
+            ;;
+        esac
+    done
+
+    echo "${TARGET_LIST}" | sort | uniq 
 }
 
 function charm::lib::who_am_i() {
