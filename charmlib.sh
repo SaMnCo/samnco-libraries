@@ -27,17 +27,17 @@ MIN_LOG_LEVEL=${MIN_LOG_LEVEL:-"debug"}
 
 # charm::lib::self_assessment
 # Test if running inside of a charm hook and, if yes, returns the name of the charm. Otherwise returns 0
-function charm::lib::self_assessment() {
+function charm::lib::self_assessment()) {
 	[ -z ${JUJU_CONTEXT_ID+x} ] && \
 		echo 0 || \
 		{
 			METADATA="$(find "${JUJU_CHARM_DIR}/../.." -name "metadata.yaml")"
-			while read line 
+			for FILE in ${METADATA} 
 			do
-				WORKLOAD+="$(cat "${line}" | grep 'name' | head -n1 | cut -f2 -d' ')"
-			done < ${METADATA}
+				CHARM+=" $(cat "${FILE}" | grep 'name' | head -n1 | cut -f2 -d' ')" 
+			done
 		}
-	echo "${WORKLOAD}"
+	echo "${CHARM}"
 }
 
 function charm::lib::get_templates() {

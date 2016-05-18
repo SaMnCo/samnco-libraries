@@ -82,3 +82,7 @@ function aws::lib::switch_k8s_cluster() {
 
 }
 
+# function aws::lib::read_arn() {
+# 	KMS_FILE_${PROJECT_NAME}
+# 	cat KMS_${PROJECT_NAME} | jq '.[].Arn' | tr -d '"')"
+# }
