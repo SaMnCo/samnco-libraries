@@ -15,7 +15,7 @@
     exit 0
 }
 
-source ./00_bashlib.sh
+# source ./00_bashlib.sh
 
 # Check if we are sudoer or not
 [ $(bash::lib::is_sudoer) -eq 0 ] && bash::lib::die "You must be root or sudo to run this script"
