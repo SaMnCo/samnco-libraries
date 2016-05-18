@@ -10,7 +10,7 @@
 #####################################################################
 
 # Discovery of the OS we're running on
-OS=`lowercase \`uname\``
+OS=`tr \`uname\` '[:upper:]' '[:lower:]'`
 KERNEL=`uname -r`
 MACH=`uname -m`
 
@@ -51,8 +51,8 @@ else
         if [ -f /etc/UnitedLinux-release ] ; then
             DIST="${DIST}[`cat /etc/UnitedLinux-release | tr "\n" ' ' | sed s/VERSION.*//`]"
         fi
-        OS=`lowercase $OS`
-        DISTROBASEDON=`lowercase $DISTROBASEDON`
+        OS=`tr $OS '[:upper:]' '[:lower:]'`
+        DISTROBASEDON=`tr $DISTROBASEDON '[:upper:]' '[:lower:]'`
         readonly OS
         readonly DIST
         readonly DISTROBASEDON
@@ -169,9 +169,9 @@ function bash::lib::log() {
 # usage bash::lib::die <log line>
 # See https://en.wikipedia.org/wiki/Syslog for more information
 function bash::lib::die() {
-	local LOGLINE="$*"
-	bash::lib::log err ${LOGLINE}. Exiting
-	exit 0
+    local LOGLINE="$*"
+    bash::lib::log err ${LOGLINE}. Exiting
+    exit 0
 }
 
 # ensure_cmd_or_install_package_apt: Test if command is available or install matching package
@@ -181,8 +181,8 @@ function bash::lib::ensure_cmd_or_install_package_apt() {
     shift
     local PKG=$*
     hash $CMD 2>/dev/null || { 
-    	bash::lib::log warn $CMD not available. Attempting to install $PKG
-    	(sudo ${APT_CMD} update && sudo ${APT_CMD} install -yqq ${APT_FORCE} ${PKG}) || bash::lib::die "Could not find $PKG"
+        bash::lib::log warn $CMD not available. Attempting to install $PKG
+        (sudo ${APT_CMD} update && sudo ${APT_CMD} install -yqq ${APT_FORCE} ${PKG}) || bash::lib::die "Could not find $PKG"
     }
 }
 
@@ -193,12 +193,12 @@ function bash::lib::ensure_cmd_or_install_from_curl() {
     shift
     local URL="$1"
     hash $CMD 2>/dev/null || { 
-    	bash::lib::ensure_cmd_or_install_package_apt curl curl
-    	bash::lib::log warn ${CMD} not available. Attempting to install from ${URL}
-    	curl -sL "${URL}" --output "${CMD}" \
-    		&& chmod 755 "${CMD}" \
-    		&& sudo mv "${CMD}" /usr/local/bin/ \
-    		|| bash::lib::die "Could not find $PKG"
+        bash::lib::ensure_cmd_or_install_package_apt curl curl
+        bash::lib::log warn ${CMD} not available. Attempting to install from ${URL}
+        curl -sL "${URL}" --output "${CMD}" \
+            && chmod 755 "${CMD}" \
+            && sudo mv "${CMD}" /usr/local/bin/ \
+            || bash::lib::die "Could not find $PKG"
     }
 }
 
@@ -206,11 +206,11 @@ function bash::lib::ensure_cmd_or_install_package_npm() {
     local CMD=$1
     shift
     local PKG=$*
-	bash::lib::ensure_cmd_or_install_package_apt npm nodejs npm
+    bash::lib::ensure_cmd_or_install_package_apt npm nodejs npm
 
     hash $CMD 2>/dev/null || { 
-    	bash::lib::log warn $CMD not available. Attempting to install $PKG via npm
-    	sudo npm install -f -q -y -g "${PKG}" || bash::lib::die "Could not find $PKG"
+        bash::lib::log warn $CMD not available. Attempting to install $PKG via npm
+        sudo npm install -f -q -y -g "${PKG}" || bash::lib::die "Could not find $PKG"
     }
 }
 
