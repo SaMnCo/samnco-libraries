@@ -15,6 +15,8 @@
     exit 0
 }
 
+source ./00_bashlib.sh
+
 # Check if we are sudoer or not
 [ $(bash::lib::is_sudoer) -eq 0 ] && bash::lib::die "You must be root or sudo to run this script"
 
@@ -44,7 +46,7 @@ function aws::lib::ensure_kubeaws_or_install() {
     	bash::lib::log warn Kube AWS CLI not available. Attempting to install. 
 		case ${OS} in 
 			"mac" ) 
-				bash::lib::log TBD
+				bash::lib::log error TBD
 			;;
 			"linux" )
 				# Need to add clever management of the latest version. Github API has that. 
@@ -59,11 +61,12 @@ function aws::lib::ensure_kubeaws_or_install() {
     }
 }
 
-function aws::lib::validate_creds() {
-	# TBD add management of creds. Test env & presence of ~/.aws/credentials. 
-	# See https://coreos.com/kubernetes/docs/latest/kubernetes-on-aws.html
+# function aws::lib::validate_creds() {
+	
+# 	# TBD add management of creds. Test env & presence of ~/.aws/credentials. 
+# 	# See https://coreos.com/kubernetes/docs/latest/kubernetes-on-aws.html
 
-}
+# }
 
 function aws::lib::switch_project() {
 # Initialize environment
