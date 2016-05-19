@@ -270,5 +270,241 @@ function bash::lib::add_to_path() {
     /etc/profile.d/${PATH_NAME}.sh
 }
 
+function bash::lib::init_file_parser() {
+    ini="$(<$1)"                # read the file
+    ini="${ini//[/\[}"          # escape [
+    ini="${ini//]/\]}"          # escape ]
+    IFS=$'\n' && ini=( ${ini} ) # convert to line-array
+    ini=( ${ini[*]//;*/} )      # remove comments with ;
+    ini=( ${ini[*]/\    =/=} )  # remove tabs before =
+    ini=( ${ini[*]/=\   /=} )   # remove tabs be =
+    ini=( ${ini[*]/\ =\ /=} )   # remove anything with a space around =
+    ini=( ${ini[*]/#\\[/\}$'\n'cfg.section.} ) # set section prefix
+    ini=( ${ini[*]/%\\]/ \(} )    # convert text2function (1)
+    ini=( ${ini[*]/=/=\( } )    # convert item to array
+    ini=( ${ini[*]/%/ \)} )     # close array parenthesis
+    ini=( ${ini[*]/%\\ \)/ \\} ) # the multiline trick
+    ini=( ${ini[*]/%\( \)/\(\) \{} ) # convert text2function (2)
+    ini=( ${ini[*]/%\} \)/\}} ) # remove extra parenthesis
+    ini[0]="" # remove first element
+    ini[${#ini[*]} + 1]='}'    # add the last brace
+    eval "$(echo "${ini[*]}")" # eval the result
+}
+
+function bash::lib::init_file_writer() {
+    IFS=' '$'\n'
+    fun="$(declare -F)"
+    fun="${fun//declare -f/}"
+    for f in $fun; do
+        [ "${f#cfg.section}" == "${f}" ] && continue
+        item="$(declare -f ${f})"
+        item="${item##*\{}"
+        item="${item%\}}"
+        item="${item//=*;/}"
+        vars="${item//=*/}"
+        eval $f
+        echo "[${f#cfg.section.}]"
+        for var in $vars; do
+            echo $var=\"${!var}\"
+        done
+    done
+}
+
+#
+# based on http://theoldschooldevops.com/2008/02/09/bash-ini-parser/
+#
+
+PREFIX="cfg_section_"
+
+function bash::lib::debug_ini {
+   return #abort debug
+   echo $*
+   echo --start--
+   echo "${ini[*]}"
+   echo --end--
+   echo
+}
+
+function bash::lib::init_cfg_parser {
+   shopt -p extglob &> /dev/null
+   CHANGE_EXTGLOB=$?
+   if [ $CHANGE_EXTGLOB = 1 ]
+   then
+      shopt -s extglob
+   fi
+   ini="$(<$1)"                 # read the file
+   ini="${ini//[/\\[}"          # escape [
+   bash::lib::debug_ini
+   ini="${ini//]/\\]}"          # escape ]
+   bash::lib::debug_ini
+   IFS=$'\n' && ini=( ${ini} )  # convert to line-array
+   bash::lib::debug_ini
+   ini=( ${ini[*]//;*/} )       # remove comments with ;
+   bash::lib::debug_ini
+   ini=( ${ini[*]/#+([[:space:]])/} ) # remove init whitespace
+   bash::lib::debug_ini "whitespace around"
+   ini=( ${ini[*]/*([[:space:]])=*([[:space:]])/=} ) # remove whitespace around =
+   bash::lib::debug_ini
+   ini=( ${ini[*]/#\\[/\}$'\n'"$PREFIX"} ) # set section prefix
+   bash::lib::debug_ini
+   ini=( ${ini[*]/%\\]/ \(} )   # convert text2function (1)
+   bash::lib::debug_ini
+   ini=( ${ini[*]/=/=\( } )     # convert item to array
+   bash::lib::debug_ini
+   ini=( ${ini[*]/%/ \)} )      # close array parenthesis
+   bash::lib::debug_ini
+   ini=( ${ini[*]/%\\ \)/ \\} ) # the multiline trick
+   bash::lib::debug_ini
+   ini=( ${ini[*]/%\( \)/\(\) \{} ) # convert text2function (2)
+   bash::lib::debug_ini
+   ini=( ${ini[*]/%\} \)/\}} )  # remove extra parenthesis
+   ini=( ${ini[*]/%\{/\{$'\n''bash::lib::init_cfg_unset ${FUNCNAME/#'$PREFIX'}'$'\n'} )  # clean previous definition of section 
+   bash::lib::debug_ini
+   ini[0]=""                    # remove first element
+   bash::lib::debug_ini
+   ini[${#ini[*]} + 1]='}'      # add the last brace
+   bash::lib::debug_ini
+   eval "$(echo "${ini[*]}")"   # eval the result
+   EVAL_STATUS=$?
+   if [ $CHANGE_EXTGLOB = 1 ]
+   then
+      shopt -u extglob
+   fi
+   return $EVAL_STATUS
+}
+
+function bash::lib::init_cfg_writer {
+   SECTION=$1
+   OLDIFS="$IFS"
+   IFS=' '$'\n'
+   if [ -z "$SECTION" ] 
+   then
+      fun="$(declare -F)"
+   else
+      fun="$(declare -F $PREFIX$SECTION)"
+      if [ -z "$fun" ]
+      then
+         echo "section $SECTION not found" >2
+         exit 1
+      fi
+   fi
+   fun="${fun//declare -f/}"
+   for f in $fun; do
+      [ "${f#$PREFIX}" == "${f}" ] && continue
+      item="$(declare -f ${f})"
+      item="${item##*\{}" # remove function definition
+      item="${item##*FUNCNAME*$PREFIX\};}" # remove clear section
+      item="${item/\}}"  # remove function close
+      item="${item%)*}" # remove everything after parenthesis
+      item="${item});" # add close parenthesis
+      vars=""
+      while [ "$item" != "" ]
+      do
+         newvar="${item%%=*}" # get item name
+         vars="$vars $newvar" # add name to collection
+         item="${item#*;}" # remove readed line
+      done
+      eval $f
+      echo "[${f#$PREFIX}]" # output section
+      for var in $vars; do
+         eval 'local length=${#'$var'[*]}' # test if var is an array
+         if [ $length == 1 ]
+         then
+            echo $var=\"${!var}\" #output var
+         else 
+            echo ";$var is an array" # add comment denoting var is an array
+            eval 'echo $var=\"${'$var'[*]}\"' # output array var
+         fi
+      done
+   done
+   IFS="$OLDIFS"
+}
+
+function bash::lib::init_cfg_unset {
+   SECTION=$1
+   OLDIFS="$IFS"
+   IFS=' '$'\n'
+   if [ -z "$SECTION" ] 
+   then
+      fun="$(declare -F)"
+   else
+      fun="$(declare -F $PREFIX$SECTION)"
+      if [ -z "$fun" ]
+      then
+         echo "section $SECTION not found" >2
+         return
+      fi
+   fi
+   fun="${fun//declare -f/}"
+   for f in $fun; do
+      [ "${f#$PREFIX}" == "${f}" ] && continue
+      item="$(declare -f ${f})"
+      item="${item##*\{}" # remove function definition
+      item="${item##*FUNCNAME*$PREFIX\};}" # remove clear section
+      item="${item/\}}"  # remove function close
+      item="${item%)*}" # remove everything after parenthesis
+      item="${item});" # add close parenthesis
+      vars=""
+      while [ "$item" != "" ]
+      do
+         newvar="${item%%=*}" # get item name
+         vars="$vars $newvar" # add name to collection
+         item="${item#*;}" # remove readed line
+      done
+      for var in $vars; do
+         unset $var
+      done
+   done
+   IFS="$OLDIFS"
+}
+
+function bash::lib::init_cfg_clear {
+   SECTION=$1
+   OLDIFS="$IFS"
+   IFS=' '$'\n'
+   if [ -z "$SECTION" ] 
+   then
+      fun="$(declare -F)"
+   else
+      fun="$(declare -F $PREFIX$SECTION)"
+      if [ -z "$fun" ]
+      then
+         echo "section $SECTION not found" >2
+         exit 1
+      fi
+   fi
+   fun="${fun//declare -f/}"
+   for f in $fun; do
+      [ "${f#$PREFIX}" == "${f}" ] && continue
+      unset -f ${f}
+   done
+   IFS="$OLDIFS"
+}
+
+function bash::lib::init_cfg_update {
+   SECTION=$1
+   VAR=$2
+   OLDIFS="$IFS"
+   IFS=' '$'\n'
+   fun="$(declare -F $PREFIX$SECTION)"
+   if [ -z "$fun" ]
+   then
+      echo "section $SECTION not found" >2
+      exit 1
+   fi
+   fun="${fun//declare -f/}"
+   item="$(declare -f ${fun})"
+   #item="${item##* $VAR=*}" # remove var declaration
+   item="${item/\}}"  # remove function close
+   item="${item}
+    $VAR=(${!VAR})
+   "
+   item="${item}
+   }" # close function again
+   
+   eval "function $item" 
+}
+
+
 # Check if we are sudoer or not
 [ $(bash::lib::is_sudoer) -eq 0 ] && bash::lib::die "You must be root or sudo to run this script"
