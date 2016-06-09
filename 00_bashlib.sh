@@ -43,7 +43,7 @@ else
         elif [ -f /etc/debian_version ] ; then
             DISTROBASEDON='Debian'
             if [ -f /etc/lsb-release ] ; then
-                DIST=`cat /etc/lsb-release | grep '^DISTRIB_ID' | awk -F=  '{ print $2 }'`
+                DIST=`cat /etc/lsb-release | grep '^DISTRIB_ID' | awk -F=  '{ print $2 }' | tr '[:upper:]' '[:lower:]'`
                 PSEUDONAME=`cat /etc/lsb-release | grep '^DISTRIB_CODENAME' | awk -F=  '{ print $2 }'`
                 REV=`cat /etc/lsb-release | grep '^DISTRIB_RELEASE' | awk -F=  '{ print $2 }'`
             fi
