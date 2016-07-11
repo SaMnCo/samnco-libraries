@@ -73,7 +73,8 @@ function aws::lib::switch_project() {
 	bash::lib::log debug Switching to selected AWS profile
 
 	# Configure Google Cloud Environment
-	export AWS_OPTIONS="--profile ${PROJECT_ID} --output json --region ${REGION} "
+	export AWS_OPTIONS="--profile ${PROJECT_ID} --region ${REGION} "
+	# Note we remove --output json as it doesn't run with all commands
 }
 
 function aws::lib::switch_k8s_cluster() {
