@@ -358,7 +358,7 @@ function bash::lib::init_cfg_parser {
    ini=( ${ini[*]/%\( \)/\(\) \{} ) # convert text2function (2)
    bash::lib::debug_ini
    ini=( ${ini[*]/%\} \)/\}} )  # remove extra parenthesis
-   ini=( ${ini[*]/%\{/\{$'\n''bash::lib::init_cfg_unset ${FUNCNAME/#'$PREFIX'}'$'\n'} )  # clean previous definition of section 
+   ini=( ${ini[*]/%\{/\{$'\n''bash::lib::init_cfg_unset ${FUNCNAME/#'$PREFIX'}'$'\n'} )  # 'clean previous definition of section 
    bash::lib::debug_ini
    ini[0]=""                    # remove first element
    bash::lib::debug_ini
@@ -505,6 +505,45 @@ function bash::lib::init_cfg_update {
    eval "function $item" 
 }
 
+# based on https://gist.github.com/pkuczynski/8665367
+
+function parse_yaml() {
+   local prefix=$2
+   local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
+   sed -ne "s|^\($s\)\($w\)$s:$s\"\(.*\)\"$s\$|\1$fs\2$fs\3|p" \
+        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
+   awk -F$fs '{
+      indent = length($1)/2;
+      vname[indent] = $2;
+      for (i in vname) {if (i > indent) {delete vname[i]}}
+      if (length($3) > 0) {
+         vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
+         printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
+      }
+   }'
+}
+
+# Test Script: 
+# #!/bin/sh
+
+# # include parse_yaml function
+# . parse_yaml.sh
+
+# # read yaml file
+# eval $(parse_yaml zconfig.yml "config_")
+
+# # access yaml content
+# echo $config_development_database
+
+# with file: 
+
+# development:
+#   adapter: mysql2
+#   encoding: utf8
+#   database: my_database
+#   username: root
+#   password:
 
 # Check if we are sudoer or not
 [ $(bash::lib::is_sudoer) -eq 0 ] && bash::lib::die "You must be root or sudo to run this script"
+
