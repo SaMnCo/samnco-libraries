@@ -81,7 +81,7 @@ function docker::lib::ensure_docker_or_install() {
     	sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys "${DOCKER_KEY}"
     	echo "deb https://apt.dockerproject.org/repo ubuntu-${UBUNTU_CODENAME} main" > /etc/apt/sources.list.d/docker.list 
     	sudo ${APT_CMD} update -qq && \
-    	sudo ${APT_CMD} install -yqq docker-engine && \
+    	sudo ${APT_CMD} install -yqq docker-engine docker.io docker-compose && \
     	sudo groupadd -f docker && \
     	sudo usermod -aG docker ${USER} && \
     	# newgrp ${USER}
@@ -89,25 +89,25 @@ function docker::lib::ensure_docker_or_install() {
     	bash::lib::die "Could not install docker-engine"
     }
 
-    local CMD=docker-machine
-    hash $CMD 2>/dev/null || {
-    	bash::lib::log warn docker-machine not available. Attempting to install. 
-    	curl -L https://github.com/docker/machine/releases/download/v"${DOCKER_MACHINE}"/docker-machine-`uname -s`-`uname -m` > /tmp/docker-machine && \
-    	sudo mv /tmp/docker-machine /usr/local/bin/docker-machine && \
-		sudo chmod +x /usr/local/bin/docker-machine && \
-		bash::lib::log info "Successfully installed docker-machine" || \
-		bash::lib::die "Could not install docker-machine"
-    }
+  #   local CMD=docker-machine
+  #   hash $CMD 2>/dev/null || {
+  #   	bash::lib::log warn docker-machine not available. Attempting to install. 
+  #   	curl -L https://github.com/docker/machine/releases/download/v"${DOCKER_MACHINE}"/docker-machine-`uname -s`-`uname -m` > /tmp/docker-machine && \
+  #   	sudo mv /tmp/docker-machine /usr/local/bin/docker-machine && \
+		# sudo chmod +x /usr/local/bin/docker-machine && \
+		# bash::lib::log info "Successfully installed docker-machine" || \
+		# bash::lib::die "Could not install docker-machine"
+  #   }
 
-    local CMD=docker-compose
-    hash $CMD 2>/dev/null || {
-    	bash::lib::log warn docker-compose not available. Attempting to install. 
-    	curl -L https://github.com/docker/compose/releases/download/"${DOCKER_COMPOSE}"/docker-compose-`uname -s`-`uname -m` > /tmp/docker-compose && \
-    	sudo mv /tmp/docker-compose /usr/local/bin/docker-compose && \
-    	sudo chmod +x /usr/local/bin/docker-compose && \
-		bash::lib::log info "Successfully installed docker-compose" || \
-		bash::lib::die "Could not install docker-compose"
-    }
+  #   local CMD=docker-compose
+  #   hash $CMD 2>/dev/null || {
+  #   	bash::lib::log warn docker-compose not available. Attempting to install. 
+  #   	curl -L https://github.com/docker/compose/releases/download/"${DOCKER_COMPOSE}"/docker-compose-`uname -s`-`uname -m` > /tmp/docker-compose && \
+  #   	sudo mv /tmp/docker-compose /usr/local/bin/docker-compose && \
+  #   	sudo chmod +x /usr/local/bin/docker-compose && \
+		# bash::lib::log info "Successfully installed docker-compose" || \
+		# bash::lib::die "Could not install docker-compose"
+  #   }
 }
 
 # add_auth: adds the content of a dockercfg file (from quay.io)
