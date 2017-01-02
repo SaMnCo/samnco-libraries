@@ -50,7 +50,8 @@ function aws::lib::ensure_kubeaws_or_install() {
 			;;
 			"linux" )
 				# Need to add clever management of the latest version. Github API has that. 
-			   	wget -c -P /tmp https://github.com/coreos/coreos-kubernetes/releases/download/v0.6.1/kube-aws-linux-${ARCH_ALT}.tar.gz && \
+				
+			   	wget -c -P /tmp https://github.com/coreos/kube-aws/releases/download/v0.9.3-rc.2/kube-aws-linux-${ARCH_ALT}.tar.gz && \
 		    		cd /tmp && \
 		    		tar xfz kube-aws-linux-${ARCH_ALT}.tar.gz && \
 		    		mv  linux-amd64/kube-aws /usr/local/bin/ && \

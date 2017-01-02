@@ -79,7 +79,7 @@ case "$(arch)" in
         ARCH="ppc64le"
     ;;
     * )
-        juju-log "Your architecture is not supported. Exiting"
+        echo "Your architecture is not supported. Exiting"
         exit 1
     ;;
 esac
@@ -95,13 +95,13 @@ case "${PSEUDONAME}" in
         APT_CMD="apt-get"
         APT_FORCE="--force-yes"
     ;;
-    "xenial" )
+    "xenial" | "yakkety" )
         LXC_CMD="$(systemd-detect-virt --container | grep lxc | wc -l)"
         APT_CMD="apt"
         APT_FORCE="--allow-downgrades --allow-remove-essential --allow-change-held-packages"
     ;;
     * )
-        juju-log "Your version of Ubuntu is not supported. Exiting"
+        echo "Your version of Ubuntu is not supported. Exiting"
         exit 1
     ;;
 esac
@@ -109,7 +109,7 @@ esac
 # Load Configuration
 MYNAME="$(readlink -f "$0")"
 MYDIR="$(dirname "${MYNAME}")"
-LOCAL_K8S_VERSION=1.1.3
+LOCAL_K8S_VERSION=1.5.1
 
 FACILITY=${FACILITY:-"local0"}
 LOGTAG=${LOGTAG:-"unknown"}
@@ -220,7 +220,7 @@ function bash::lib::ensure_cmd_or_install_kubectl() {
     [ -z ${K8S_VERSION} ] && K8S_VERSION=${LOCAL_K8S_VERSION}
     hash $CMD 2>/dev/null || {
         bash::lib::log warn $CMD not available. Attempting to install...
-        wget http://storage.googleapis.com/kubernetes-release/release/v${K8S_VERSION}/bin/linux/amd64/kubectl
+        wget curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
         chmod 755 kubectl
         sudo mv kubectl /usr/local/bin/
     }
